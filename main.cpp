@@ -5,7 +5,7 @@
 #include "parser.h"
 
 void ParseAndProcessQuery(BudgetManager& manager, std::string_view line) {
-    // Разработайте функцию чтения и обработки запроса.
+    
 }
 
 int ReadNumberOnLine(std::istream& input) {
