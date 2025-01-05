@@ -19,22 +19,24 @@ public:
 class ModifyQuery : public Query
 {
 public:
-    virtual void PayTax(Date from, Date to) = 0;
+    virtual void PayTax(Date from, Date to, double number) = 0;
     virtual void Earn(Date from, Date to, double income) = 0;
+    virtual void Spend(Date from, Date to, double outcome) = 0;
     ~ModifyQuery() override {};
 };
 
 enum class Queries { 
     COMPUTEINCOME,
     PAYTAX,
-    EARN
+    EARN,
+    SPEND
 };
 
 struct ParsedValues {
     Queries query;
     Date from;
     Date to;
-    std::optional<double> money;
+    std::optional<double> number;
 };
 
 ParsedValues Parser(std::string_view);

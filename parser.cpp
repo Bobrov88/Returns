@@ -11,8 +11,10 @@ Queries ParseQuery(std::string_view word)
         return Queries::COMPUTEINCOME;
     else if (word == "Earn"sv)
         return Queries::EARN;
-    else // if (word == "PayTax"sv)
+    else if (word == "PayTax"sv)
         return Queries::PAYTAX;
+    else
+        return Queries::SPEND;
 }
 
 ParsedValues Parser(std::string_view line)
@@ -25,11 +27,11 @@ ParsedValues Parser(std::string_view line)
     Date from(std::move(word));
     iss >> word;
     Date to(std::move(word));
-    std::optional<double> money = std::nullopt;
+    std::optional<double> number = std::nullopt;
     if (iss)
     {
         iss >> word;
-        money = std::stod(std::move(word));
+        number = std::stod(std::move(word));
     }
-    return {query, from, to, money};
+    return {query, from, to, number};
 }
