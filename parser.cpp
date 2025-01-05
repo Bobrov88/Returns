@@ -2,19 +2,34 @@
 
 // Напишите в этом файле код, ответственный за чтение запросов.
 
-void Parser(std::string_view line)
+Query::~Query() {}
+
+Queries ParseQuery(std::string_view word)
+{
+    using namespace std::string_view_literals;
+    if (word == "ComputeIncome"sv)
+        return Queries::COMPUTEINCOME;
+    else if (word == "Earn"sv)
+        return Queries::EARN;
+    else // if (word == "PayTax"sv)
+        return Queries::PAYTAX;
+}
+
+ParsedValues Parser(std::string_view line)
 {
     std::istringstream iss{std::move(std::string{line})};
     std::string word;
     iss >> word;
-    std::string query = std::move(word);
+    Queries query = ParseQuery(word);
     iss >> word;
     Date from(std::move(word));
     iss >> word;
     Date to(std::move(word));
+    std::optional<double> money = std::nullopt;
     if (iss)
     {
         iss >> word;
-        double money = std::stod(std::move(word));
+        money = std::stod(std::move(word));
     }
+    return {query, from, to, money};
 }

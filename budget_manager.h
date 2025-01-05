@@ -1,8 +1,8 @@
 #pragma once
 
-#include "date.h"
+#include "parser.h"
 
-class BudgetManager
+class BudgetManager : public ReadQuery, public ModifyQuery
 {
 
     struct DayInfo
@@ -12,13 +12,16 @@ class BudgetManager
 
     std::vector<DayInfo> day_incomes;
 
+    void ComputeIncome(Date from, Date to) const override;
+    void PayTax(Date from, Date to) override;
+    void Earn(Date from, Date to, double income) override;
+
 public:
     static const Date START_DATE;
     static const Date END_DATE;
     static const double TAX;
 
     BudgetManager();
-    void ComputeIncome(Date from, Date to) const;
-    void PayTax(Date from, Date to);
-    void Earn(Date from, Date to, double income);
+    ~BudgetManager() override;
+    void InvokeQuery(ParsedValues);
 };

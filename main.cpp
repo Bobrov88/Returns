@@ -4,22 +4,26 @@
 #include <string_view>
 #include "parser.h"
 
-void ParseAndProcessQuery(BudgetManager& manager, std::string_view line) {
-    
+void ParseAndProcessQuery(BudgetManager &manager, std::string_view line)
+{
+    manager.InvokeQuery(Parser(line));
 }
 
-int ReadNumberOnLine(std::istream& input) {
+int ReadNumberOnLine(std::istream &input)
+{
     std::string line;
     std::getline(input, line);
     return std::stoi(line);
 }
 
-int main() {
+int main()
+{
     BudgetManager manager;
 
     const int query_count = ReadNumberOnLine(std::cin);
 
-    for (int i = 0; i < query_count; ++i) {
+    for (int i = 0; i < query_count; ++i)
+    {
         std::string line;
         std::getline(std::cin, line);
         ParseAndProcessQuery(manager, line);

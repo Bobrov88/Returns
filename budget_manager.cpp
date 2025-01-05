@@ -15,13 +15,16 @@ BudgetManager::BudgetManager()
     day_incomes.resize(static_cast<size_t>(Date::ComputeDistance(START_DATE, END_DATE)));
 }
 
+BudgetManager::~BudgetManager() {}
+
 void BudgetManager::ComputeIncome(Date from, Date to) const
 {
     std::cout << std::accumulate(day_incomes.begin() + Date::ComputeDistance(START_DATE, from),
                                  day_incomes.begin() + Date::ComputeDistance(START_DATE, to) + 1,
                                  0.0,
                                  [](double sum, const DayInfo &dayinfo)
-                                 { return sum + dayinfo.money; });
+                                 { return sum + dayinfo.money; })
+              << "\n";
 }
 
 void BudgetManager::PayTax(Date from, Date to)
@@ -45,4 +48,14 @@ void BudgetManager::Earn(Date from, Date to, double income)
                    {
                        return DayInfo{dayinfo.money + everyday_income};
                    });
+}
+
+void BudgetManager::InvokeQuery(ParsedValues pq)
+{
+    if (pq.query == Queries::COMPUTEINCOME)
+        ComputeIncome(pq.from, pq.to);
+    if (pq.query == Queries::EARN)
+        Earn(pq.from, pq.to, *pq.money);
+    if (pq.query == Queries::PAYTAX)
+        PayTax(pq.from, pq.to);
 }
