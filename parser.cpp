@@ -1,37 +1,80 @@
 #include "parser.h"
+#include "bulk_updater.h"
 
-// Напишите в этом файле код, ответственный за чтение запросов.
+#include <unordered_map>
 
-Query::~Query() {}
+namespace queries {
 
-Queries ParseQuery(std::string_view word)
-{
-    using namespace std::string_view_literals;
-    if (word == "ComputeIncome"sv)
-        return Queries::COMPUTEINCOME;
-    else if (word == "Earn"sv)
-        return Queries::EARN;
-    else if (word == "PayTax"sv)
-        return Queries::PAYTAX;
-    else
-        return Queries::SPEND;
-}
+class ComputeIncome : public ComputeQuery {
+public:
+    using ComputeQuery::ComputeQuery;
 
-ParsedValues Parser(std::string_view line)
-{
-    std::istringstream iss{std::move(std::string{line})};
-    std::string word;
-    iss >> word;
-    Queries query = ParseQuery(word);
-    iss >> word;
-    Date from(std::move(word));
-    iss >> word;
-    Date to(std::move(word));
-    std::optional<double> number = std::nullopt;
-    if (iss)
-    {
-        iss >> word;
-        number = std::stod(std::move(word));
+    [[nodiscard]] ReadResult Process(const BudgetManager &budget) const override {
+        return {budget.ComputeSum(GetFrom(), GetTo())};
     }
-    return {query, from, to, number};
+
+    class Factory : public QueryFactory {
+    public:
+        [[nodiscard]] std::unique_ptr<Query> Construct(std::string_view config) const override {
+            auto parts = Split(config, ' ');
+            return std::make_unique<ComputeIncome>(Date(parts[0]), Date(parts[1]));
+        }
+    };
+};
+
+class Alter : public ModifyQuery {
+public:
+    Alter(Date from, Date to, double amount)
+        : ModifyQuery(from, to), amount_(amount) {
+    }
+
+    void Process(BudgetManager& budget) const override {
+        double day_income = amount_ / (Date::ComputeDistance(GetFrom(), GetTo()) + 1);
+        budget.AddBulkOperation(GetFrom(), GetTo(), BulkMoneyAdder{day_income});
+    }
+
+    class Factory : public QueryFactory {
+    public:
+        [[nodiscard]] std::unique_ptr<Query> Construct(std::string_view config) const override {
+            auto parts = Split(config, ' ');
+            double payload = std::stod(std::string(parts[2]));
+            return std::make_unique<Alter>(Date(parts[0]), Date(parts[1]), payload);
+        }
+    };
+
+private:
+    double amount_;
+};
+
+class PayTax : public ModifyQuery {
+public:
+    using ModifyQuery::ModifyQuery;
+
+    void Process(BudgetManager& budget) const override {
+        budget.AddBulkOperation(GetFrom(), GetTo(), BulkTaxApplier{1});
+    }
+
+    class Factory : public QueryFactory {
+    public:
+        [[nodiscard]] std::unique_ptr<Query> Construct(std::string_view config) const override {
+            auto parts = Split(config, ' ');
+            return std::make_unique<PayTax>(Date(parts[0]), Date(parts[1]));
+        }
+    };
+};
+
+}  // namespace queries
+
+const QueryFactory& QueryFactory::GetFactory(std::string_view id) {
+    using namespace std::literals;
+
+    static queries::ComputeIncome::Factory compute_income;
+    static queries::Alter::Factory earn;
+    static queries::PayTax::Factory pay_tax;
+    static std::unordered_map<std::string_view, const QueryFactory &> factories
+            = {{"ComputeIncome"sv, compute_income},
+               {"Earn"sv,          earn},
+               {"PayTax"sv,        pay_tax}};
+
+    return factories.at(id);
 }

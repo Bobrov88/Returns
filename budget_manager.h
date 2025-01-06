@@ -1,29 +1,30 @@
 #pragma once
 
-#include "parser.h"
+#include "bulk_updater.h"
+#include "date.h"
+#include "summing_segment_tree.h"
 
-class BudgetManager : public ReadQuery, public ModifyQuery
-{
-
-    struct DayInfo
-    {
-        double income;
-        double outcome;
-    };
-
-    std::vector<DayInfo> day_incomes;
-
-    void ComputeIncome(Date from, Date to) const override;
-    void PayTax(Date from, Date to, double number) override;
-    void Earn(Date from, Date to, double income) override;
-    void Spend(Date from, Date to, double outcome) override;
-
+class BudgetManager {
 public:
     static const Date START_DATE;
     static const Date END_DATE;
-    static const double TAX;
 
-    BudgetManager();
-    ~BudgetManager() override;
-    void InvokeQuery(ParsedValues);
+    static size_t GetDayIndex(const Date& day) {
+        return static_cast<size_t>(Date::ComputeDistance(START_DATE, day));
+    }
+
+    static IndexSegment MakeDateSegment(const Date& from, const Date& to) {
+        return {GetDayIndex(from), GetDayIndex(to) + 1};
+    }
+
+    double ComputeSum(const Date& from, const Date& to) const {
+        return tree_.ComputeSum(MakeDateSegment(from, to));
+    }
+
+    void AddBulkOperation(const Date& from, const Date& to, const BulkLinearUpdater& operation) {
+        tree_.AddBulkOperation(MakeDateSegment(from, to), operation);
+    }
+
+private:
+    SummingSegmentTree<double, BulkLinearUpdater> tree_{GetDayIndex(END_DATE)};
 };
