@@ -1,2 +1,2 @@
 # Returns
-Yandex task about returning values from fucntions
+Yandex task about returning values from functions
