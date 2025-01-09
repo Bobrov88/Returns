@@ -17,7 +17,7 @@ public:
         return {GetDayIndex(from), GetDayIndex(to) + 1};
     }
 
-    double ComputeSum(const Date& from, const Date& to) const {
+    DayInfo ComputeSum(const Date& from, const Date& to) const {
         return tree_.ComputeSum(MakeDateSegment(from, to));
     }
 
@@ -26,5 +26,5 @@ public:
     }
 
 private:
-    SummingSegmentTree<double, BulkLinearUpdater> tree_{GetDayIndex(END_DATE)};
+    SummingSegmentTree<DayInfo, BulkLinearUpdater> tree_{GetDayIndex(END_DATE)};
 };

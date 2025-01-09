@@ -5,7 +5,6 @@
 
 namespace queries
 {
-
     class ComputeIncome : public ComputeQuery
     {
     public:
@@ -13,7 +12,8 @@ namespace queries
 
         [[nodiscard]] ReadResult Process(const BudgetManager &budget) const override
         {
-            return {budget.ComputeSum(GetFrom(), GetTo())};
+            DayInfo result = budget.ComputeSum(GetFrom(), GetTo());
+            return {result.income_ - result.outcome_};
         }
 
         class Factory : public QueryFactory
@@ -61,11 +61,11 @@ namespace queries
     public:
         using ModifyQuery::ModifyQuery;
 
-        PayTax(Date from, Date to, int amount) : ModifyQuery(from, to), amount_(amount) {}
+        PayTax(Date from, Date to, double amount) : ModifyQuery(from, to), amount_(amount) {}
 
         void Process(BudgetManager &budget) const override
         {
-            budget.AddBulkOperation(GetFrom(), GetTo(), BulkTaxApplier{amount_});
+            budget.AddBulkOperation(GetFrom(), GetTo(), BulkTaxApplier{1. - amount_});
         }
 
         class Factory : public QueryFactory
@@ -74,13 +74,13 @@ namespace queries
             [[nodiscard]] std::unique_ptr<Query> Construct(std::string_view config) const override
             {
                 auto parts = Split(config, ' ');
-                int payload = std::stoi(std::string(parts[2]));
-                return std::make_unique<PayTax>(Date(parts[0]), Date(parts[1]), payload);
+                double payload = std::stod(std::string(parts[2]));
+                return std::make_unique<PayTax>(Date(parts[0]), Date(parts[1]), payload/100.);
             }
         };
 
     private:
-        int amount_;
+        double amount_;
     };
 
     class Spend : public ModifyQuery

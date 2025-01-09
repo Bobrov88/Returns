@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "entities.h"
 
 struct IndexSegment {
     size_t length() const {
